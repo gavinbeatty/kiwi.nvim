@@ -4,6 +4,27 @@ local sep = require("plenary.path").path.sep
 
 local M = {}
 
+M.enable_keymaps = function(buffer_number)
+  local keymaps = config.keymaps
+  local opts = { noremap = true, silent = true, nowait = true }
+  opts.desc = "wiki create or open link"
+  vim.api.nvim_buf_set_keymap(buffer_number, "v", keymaps.create_or_open, [[:'<,'>lua require("kiwi").create_or_open_wiki_file()<CR>]], opts)
+  opts.desc = "wiki open link"
+  vim.api.nvim_buf_set_keymap(buffer_number, "n", keymaps.create_or_open, [[:lua require("kiwi").open_link()<CR>]], opts)
+  opts.desc = "wiki next link"
+  vim.api.nvim_buf_set_keymap(buffer_number, "n", keymaps.next, [[:let @/="\\[.\\{-}\\]"<CR>nl]], opts)
+  opts.desc = "wiki previous link"
+  vim.api.nvim_buf_set_keymap(buffer_number, "n", keymaps.prev, [[:let @/="\\[.\\{-}\\]"<CR>Nl]], opts)
+end
+
+M.disable_keymaps = function(buffer_number)
+  local keymaps = config.keymaps
+  vim.api.nvim_buf_set_keymap(buffer_number, "v", keymaps.create_or_open, "<Nop>", {})
+  vim.api.nvim_buf_set_keymap(buffer_number, "n", keymaps.create_or_open, "<Nop>", {})
+  vim.api.nvim_buf_set_keymap(buffer_number, "n", keymaps.next, "<Nop>", {})
+  vim.api.nvim_buf_set_keymap(buffer_number, "n", keymaps.prev, "<Nop>", {})
+end
+
 -- Open wiki index file in the current tab
 M.open_wiki_index = function(name)
   if name == nil then
@@ -22,10 +43,7 @@ M.open_wiki_index = function(name)
   local wiki_index_path = config.path .. sep .. "index.md"
   local buffer_number = vim.fn.bufnr(wiki_index_path, true)
   vim.api.nvim_win_set_buf(0, buffer_number)
-  local opts = { noremap = true, silent = true, nowait = true }
-  vim.api.nvim_buf_set_keymap(buffer_number, "v", "<CR>", ":'<,'>lua require(\"kiwi\").create_or_open_wiki_file()<CR>", opts)
-  vim.api.nvim_buf_set_keymap(buffer_number, "n", "<CR>", ":lua require(\"kiwi\").open_link()<CR>", opts)
-  vim.api.nvim_buf_set_keymap(buffer_number, "n", "<Tab>", ":let @/=\"\\\\[.\\\\{-}\\\\]\"<CR>nl", opts)
+  M.enable_keymaps(buffer_number)
 end
 
 -- Create a new Wiki entry in Journal folder on highlighting word and pressing <CR>
@@ -41,10 +59,7 @@ M.create_or_open_wiki_file = function()
   vim.api.nvim_set_current_line(newline)
   local buffer_number = vim.fn.bufnr(config.path .. utils.get_relative_path(config) .. sep .. filename, true)
   vim.api.nvim_win_set_buf(0, buffer_number)
-  local opts = { noremap = true, silent = true, nowait = true }
-  vim.api.nvim_buf_set_keymap(buffer_number, "v", "<CR>", ":'<,'>lua require(\"kiwi\").create_or_open_wiki_file()<CR>", opts)
-  vim.api.nvim_buf_set_keymap(buffer_number, "n", "<CR>", ":lua require(\"kiwi\").open_link()<CR>", opts)
-  vim.api.nvim_buf_set_keymap(buffer_number, "n", "<Tab>", ":let @/=\"\\\\[.\\\\{-}\\\\]\"<CR>nl", opts)
+  M.enable_keymaps(buffer_number)
 end
 
 -- Open a link under the cursor
@@ -59,10 +74,7 @@ M.open_link = function()
     local buffer_number = vim.fn.bufnr(filename, true)
     if buffer_number ~= -1 then
       vim.api.nvim_win_set_buf(0, buffer_number)
-      local opts = { noremap = true, silent = true, nowait = true }
-      vim.api.nvim_buf_set_keymap(buffer_number, "v", "<CR>", ":'<,'>lua require(\"kiwi\").create_or_open_wiki_file()<CR>", opts)
-      vim.api.nvim_buf_set_keymap(buffer_number, "n", "<CR>", ":lua require(\"kiwi\").open_link()<CR>", opts)
-      vim.api.nvim_buf_set_keymap(buffer_number, "n", "<Tab>", ":let @/=\"\\\\[.\\\\{-}\\\\]\"<CR>nl", opts)
+      M.enable_keymaps(buffer_number)
     end
   else
     vim.print("E: Cannot find file")
